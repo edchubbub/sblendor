@@ -1,9 +1,12 @@
 package com.sblendor
 
+import akka.actor.AddressFromURIString
 import akka.actor.typed.ActorSystem
 import akka.cluster.typed._
 import akka.management.scaladsl.AkkaManagement
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
+
+import scala.collection.JavaConverters._
 
 object Main {
 
@@ -15,24 +18,31 @@ object Main {
 	def main(args: Array[String]): Unit = {
 		println("Hello Sblendor")
 
-		val ports = if (args.isEmpty) Seq(25251, 25252, 0)
-			else args.toSeq.map(_.toInt)
+		val seedNodePorts = ConfigFactory.load().getStringList("akka.cluster.seed-nodes")
+			.asScala
+			.flatMap { case AddressFromURIString(s) => s.port }
 
-		ports.foreach(startup)
+		val ports = args.headOption match {
+			case Some(port) => Seq(port.toInt)
+			case None 			=> seedNodePorts ++ Seq(0)
+		}
+
+		ports foreach { port =>
+			val httpPort =
+				if (port > 0) 10000 + port
+				else 0
+
+			val config = configWithPort(port)
+			ActorSystem[Nothing](Guardian(httpPort), "Sblendor", config)
+			//AkkaManagement(system).start
+		}
 	}
 
-	def startup(port: Int): Unit = {
-		val key = s"akka.remote.artery.canonical.port=$port"
-		val config = ConfigFactory.parseString(key).withFallback(ConfigFactory.load())
-		val system = ActorSystem[Nothing](Guardian(), "ClusterSystem", config)
-		val cluster = Cluster(system)
-
-		println(s"starting up... $port")
-
-//		cluster.manager ! Join(cluster.selfMember.address)
-
-		//TODO: Check how to manage akka cluster via http for 2 nodes
-		AkkaManagement(system).start()
+	def configWithPort(port: Int): Config = {
+		ConfigFactory.parseString(
+			s"""
+				 |akka.remote.artery.canonical.port=$port
+				 |""".stripMargin).withFallback(ConfigFactory.load())
 	}
 
 }

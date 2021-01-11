@@ -4,11 +4,33 @@ import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityTypeKey}
 import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior}
-import com.sblendor.Gem.Gem
+import com.sblendor.domain.Gem.Gem
 
 object BoardGame {
 
-  // State = represents the current state of actor
+  /**
+   * Init
+   *
+   * Factory of BoardGame instances
+   *
+   * Cluster Sharding
+   * - will take care of the lifecycle of this Board Game instance
+   * - ensures that there is only 1 instance of Board Game in the cluster
+   * - routes msgs to specific Board Game instance
+   *
+   */
+
+  val EntityKey: EntityTypeKey[Command] = EntityTypeKey[Command]("BoardGame")
+
+  def initSharding(system: ActorSystem[_]): Unit = {
+    ClusterSharding(system).init(Entity(EntityKey) { entityContext =>
+      BoardGame(entityContext.entityId)
+    })
+  }
+
+  /**
+   * State = represents the current state of actor
+   */
 
   final case class State(gems: Map[Gem, Int]) extends CborSerializable {
     def updateGems(quantity: List[Gem]): State = {
@@ -25,7 +47,9 @@ object BoardGame {
     val empty = State(Map.empty)
   }
 
-  // Commands = incoming message
+  /**
+   * Commands = incoming message
+   */
 
   sealed trait Command extends CborSerializable
 
@@ -37,29 +61,13 @@ object BoardGame {
 
   final case class Rejected(reason: String) extends Confirmation
 
-  // Events = will be stored
+  /**
+   * Events = will be stored
+   */
 
   sealed trait Event extends CborSerializable
 
   final case class GemsObtained(playerId: String, quantity: List[Gem]) extends Event
-
-
-  // Init
-  // Cluster Sharding
-  // - will take care of the lifecycle of this Board Game instance
-  // - ensures that there is only 1 instance of Board Game in the cluster
-  // - routes msgs to specific Board Game instance
-
-  // Factory like of BoardGame instances
-
-  val EntityKey: EntityTypeKey[Command] = EntityTypeKey[Command]("BoardGame")
-
-  def init(system: ActorSystem[_]): Unit = {
-    ClusterSharding(system).init(Entity(EntityKey) { entityContext =>
-      BoardGame(entityContext.entityId)
-    })
-  }
-
 
   def handleCommand(playerId: String, state: State, command: Command): Effect[Event, State] =
     command match {
@@ -73,8 +81,11 @@ object BoardGame {
         }
     }
 
+  /**
+   * where the replaying of stored events happen
+   */
+
   def handleEvent(state: State, event: Event): State =
-    // where the replaying of stored events happen
     event match {
       case GemsObtained(_, quantity) => state.updateGems(quantity: List[Gem])
     }

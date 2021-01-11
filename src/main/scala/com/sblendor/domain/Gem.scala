@@ -1,4 +1,4 @@
-package com.sblendor
+package com.sblendor.domain
 
 object Gem {
 

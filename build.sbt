@@ -15,6 +15,11 @@ val akkaDependencies = Seq(
   "com.typesafe.akka" %% "akka-serialization-jackson" % AkkaVersion
 )
 
+val akkaHttpDependencies = Seq(
+  "com.typesafe.akka" %% "akka-http" % AkkaHttpVersion,
+  "com.typesafe.akka" %% "akka-http-spray-json" % AkkaHttpVersion
+)
+
 val akkaManagementDependencies = Seq(
   "com.lightbend.akka.management" %% "akka-management" % AkkaManagementVersion,
   "com.lightbend.akka.management" %% "akka-management-cluster-http" % AkkaManagementVersion
@@ -28,5 +33,5 @@ lazy val sblendor = project
   .in(file("."))
   .settings(
     mainClass in (Compile, run) := Some("com.sblendor.Main"),
-    libraryDependencies ++= akkaDependencies ++ akkaManagementDependencies ++ logDependencies
+    libraryDependencies ++= akkaDependencies ++ akkaHttpDependencies ++ akkaManagementDependencies ++ logDependencies
   )
