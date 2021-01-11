@@ -2,6 +2,7 @@ package com.sblendor
 
 import akka.actor.typed.ActorSystem
 import akka.cluster.typed._
+import akka.management.scaladsl.AkkaManagement
 import com.typesafe.config.ConfigFactory
 
 object Main {
@@ -14,7 +15,7 @@ object Main {
 	def main(args: Array[String]): Unit = {
 		println("Hello Sblendor")
 
-		val ports = if (args.isEmpty) Seq(25251, 25252)
+		val ports = if (args.isEmpty) Seq(25251, 25252, 0)
 			else args.toSeq.map(_.toInt)
 
 		ports.foreach(startup)
@@ -28,12 +29,10 @@ object Main {
 
 		println(s"starting up... $port")
 
-		cluster.manager ! Join(cluster.selfMember.address)
+//		cluster.manager ! Join(cluster.selfMember.address)
 
-		import akka.management.scaladsl.AkkaManagement
+		//TODO: Check how to manage akka cluster via http for 2 nodes
 		AkkaManagement(system).start()
-
-
 	}
 
 }

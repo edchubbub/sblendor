@@ -17,6 +17,4 @@ val logging = Seq(
   "ch.qos.logback" % "logback-classic" % "1.2.3"
 )
 
-val AkkaVersionx = "2.6.9"
-
 libraryDependencies ++= akka ++ akkaManagement ++ logging
