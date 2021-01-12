@@ -58,7 +58,6 @@ object BoardGame {
   sealed trait Confirmation extends CborSerializable
 
   final case class Accepted(msg: String) extends Confirmation
-
   final case class Rejected(reason: String) extends Confirmation
 
   /**

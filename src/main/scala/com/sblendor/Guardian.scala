@@ -1,6 +1,6 @@
 package com.sblendor
 
-import akka.actor.typed.{Behavior, PostStop, Signal}
+import akka.actor.typed.{ActorSystem, Behavior, PostStop, Signal}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 
 /**
@@ -15,11 +15,12 @@ class Guardian[T](httpPort: Int, context: ActorContext[T]) extends AbstractBehav
 
   context.log.info("Guardian started...")
 
-  def apply(httpPort: Int, context: ActorContext[T]): Behavior[T] = {
+  def apply[T](httpPort: Int, context: ActorContext[T]): Behavior[T] = {
     BoardGame.initSharding(context.system)
 
-    val routes = new BoardGameRoutes(context.system)
-    BoardGameHttpServer.start(routes, httpPort, context.system)
+    val routes = new BoardGameRoutes[T](context.system.asInstanceOf[ActorSystem[T]])
+    context.log.info("PORT {}", httpPort)
+    BoardGameHttpServer.start(routes.boardGame, httpPort, context.system)
 
     Behaviors.empty
   }
