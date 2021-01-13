@@ -13,17 +13,12 @@ object Guardian {
 
 class Guardian[T](httpPort: Int, context: ActorContext[T]) extends AbstractBehavior[T](context) {
 
-  context.log.info("Guardian started...")
+  context.log.info("Guardian starting...")
 
-  def apply[T](httpPort: Int, context: ActorContext[T]): Behavior[T] = {
-    BoardGame.initSharding(context.system)
-
-    val routes = new BoardGameRoutes[T](context.system.asInstanceOf[ActorSystem[T]])
-    context.log.info("PORT {}", httpPort)
-    BoardGameHttpServer.start(routes.boardGame, httpPort, context.system)
-
-    Behaviors.empty
-  }
+  BoardGame.initSharding(context.system)
+  val routes = new BoardGameRoutes(context.system.asInstanceOf[ActorSystem[T]])
+  context.log.info("PORT {}", httpPort)
+  BoardGameHttpServer.start(routes.boardGame, httpPort, context.system)
 
   override def onMessage(msg: T): Behavior[T] = {
     Behaviors.unhandled

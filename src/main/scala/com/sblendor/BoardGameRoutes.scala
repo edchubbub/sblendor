@@ -58,7 +58,7 @@ final class BoardGameRoutes[T](system: ActorSystem[T]) extends JsonSupport {
 
   private val sharding = ClusterSharding(system)
 
-  private implicit val timeout: Timeout = system.settings.config.getDuration("").toMillis.millis
+  private implicit val timeout: Timeout = system.settings.config.getDuration("sblendor.routes.ask-timeout").toMillis.millis
 
   private def getGems(playerId: String, gems: List[Gem]): Future[Confirmation] = {
     val ref = sharding.entityRefFor(BoardGame.EntityKey, playerId)
