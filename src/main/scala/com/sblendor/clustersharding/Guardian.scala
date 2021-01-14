@@ -1,7 +1,8 @@
-package com.sblendor
+package com.sblendor.clustersharding
 
-import akka.actor.typed.{ActorSystem, Behavior, PostStop, Signal}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
+import akka.actor.typed.{ActorSystem, Behavior, PostStop, Signal}
+import com.sblendor.http.{BoardGameHttpServer, BoardGameRoutes}
 
 /**
  * Root actor bootstrapping the application

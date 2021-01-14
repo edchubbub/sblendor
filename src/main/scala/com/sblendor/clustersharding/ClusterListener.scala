@@ -1,7 +1,7 @@
-package com.sblendor
+package com.sblendor.clustersharding
 
-import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
+import akka.actor.typed.{ActorRef, Behavior}
 import akka.cluster.ClusterEvent
 import akka.cluster.ClusterEvent.{MemberEvent, ReachabilityEvent}
 import akka.cluster.typed.{Cluster, Subscribe}

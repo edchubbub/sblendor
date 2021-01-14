@@ -1,9 +1,12 @@
-package com.sblendor
+package com.sblendor.clustersharding
 
-import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
+import akka.actor.typed.{ActorSystem, Behavior}
 import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityTypeKey}
 import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior}
+import com.sblendor.domain.BoardGameCommands.{Accepted, Command, GetGems, Rejected}
+import com.sblendor.domain.BoardGameEvents.{Event, GemsObtained}
+import com.sblendor.domain.CborSerializable
 import com.sblendor.domain.Gem.Gem
 
 object BoardGame {
@@ -47,27 +50,6 @@ object BoardGame {
     val empty = State(Map.empty)
   }
 
-  /**
-   * Commands = incoming message
-   */
-
-  sealed trait Command extends CborSerializable
-
-  final case class GetGems(quantity: List[Gem], replyTo: ActorRef[Confirmation]) extends Command
-
-  sealed trait Confirmation extends CborSerializable
-
-  final case class Accepted(msg: String) extends Confirmation
-  final case class Rejected(reason: String) extends Confirmation
-
-  /**
-   * Events = will be stored
-   */
-
-  sealed trait Event extends CborSerializable
-
-  final case class GemsObtained(playerId: String, quantity: List[Gem]) extends Event
-
   def handleCommand(playerId: String, state: State, command: Command): Effect[Event, State] =
     command match {
       case GetGems(quantity, replyTo) =>
@@ -97,7 +79,5 @@ object BoardGame {
       (state, event) => handleEvent(state, event)
     )
   }
-
-
 
 }

@@ -1,13 +1,14 @@
-package com.sblendor
+package com.sblendor.http
 
+import akka.Done
 import akka.actor.CoordinatedShutdown
 import akka.actor.typed.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
-import akka.{Done, actor => classic}
 
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
+import akka.{actor => classic}
 
 object BoardGameHttpServer {
 

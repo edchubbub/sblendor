@@ -4,6 +4,7 @@ import akka.actor.AddressFromURIString
 import akka.actor.typed.ActorSystem
 import akka.cluster.typed._
 import akka.management.scaladsl.AkkaManagement
+import com.sblendor.clustersharding.Guardian
 import com.typesafe.config.{Config, ConfigFactory}
 
 import scala.collection.JavaConverters._
