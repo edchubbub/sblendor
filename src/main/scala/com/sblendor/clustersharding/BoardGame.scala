@@ -1,13 +1,17 @@
 package com.sblendor.clustersharding
 
-import akka.actor.typed.{ActorSystem, Behavior}
+import akka.actor.typed.scaladsl.{Behaviors, LoggerOps}
+import akka.actor.typed.{ActorSystem, Behavior, SupervisorStrategy}
 import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityTypeKey}
 import akka.persistence.typed.PersistenceId
-import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior}
-import com.sblendor.domain.BoardGameCommands.{Accepted, Command, GetGems, Rejected}
-import com.sblendor.domain.BoardGameEvents.{Event, GemsObtained}
-import com.sblendor.domain.CborSerializable
-import com.sblendor.domain.Gem.Gem
+import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior, ReplyEffect}
+import com.sblendor.persistence.BoardGameCommands._
+import com.sblendor.persistence.BoardGameEvents.{Event, GameEnded, GemsObtained}
+import com.sblendor.persistence.BoardGameStates
+import com.sblendor.persistence.BoardGameStates.State
+import com.sblendor.persistence.Gem.Gem
+
+import scala.concurrent.duration._
 
 object BoardGame {
 
@@ -31,53 +35,62 @@ object BoardGame {
     })
   }
 
-  /**
-   * State = represents the current state of actor
-   */
-
-  final case class State(gems: Map[Gem, Int]) extends CborSerializable {
-    def updateGems(quantity: List[Gem]): State = {
-      val states = quantity map { g =>
-        val newQty: Int = gems(g) - 1
-        copy(gems = gems.updated(g, newQty))
-      }
-      states.last
+  def apply(playerId: String): Behavior[Command] = {
+    Behaviors.setup[Command] { context =>
+      EventSourcedBehavior.withEnforcedReplies[Command, Event, State](
+        PersistenceId("BoardGame", playerId),
+        BoardGameStates.BlankState(),
+        (state, command) => handleCommand(playerId, state, command),
+        (state, event)   => handleEvent(state, event)
+      ).snapshotWhen((state, _, _) => {
+        context.log.info2("Snapshot actor {} => state: {}", context.self.path.name, state)
+        true
+      }).onPersistFailure(
+        SupervisorStrategy.restartWithBackoff(
+          minBackoff = 10.seconds,
+          maxBackoff = 60.seconds,
+          randomFactor = 0)
+      )
     }
-
   }
 
-  object State {
-    val empty = State(Map.empty)
-  }
+  def handleCommand(playerId: String, state: State, command: Command): ReplyEffect[Event, State] =
+    state match {
+      case BoardGameStates.BlankState(_)  => Effect.noReply
+      case BoardGameStates.ConcludedState =>
+        command match {
+          case EndGame(replyTo) =>
+            Effect.persist(GameEnded)
+              .thenReply(replyTo)(_ => Accepted("Game Concluded!"))
+          case _ => Effect.noReply
+        }
 
-  def handleCommand(playerId: String, state: State, command: Command): Effect[Event, State] =
-    command match {
-      case GetGems(quantity, replyTo) =>
-        if (quantity.size <= 0) {
-          replyTo ! Rejected("Quantity must be greater than zero")
-          Effect.none
-        } else {
-          Effect.persist(GemsObtained(playerId, quantity))
-            .thenRun(updatedBoard => replyTo ! Accepted("Success!"))
+      case BoardGameStates.PlayingState(_) =>
+        command match {
+          case GetGems(quantity, replyTo) =>
+            if (quantity.size <= 0) {
+              Effect.unhandled
+                .thenReply(replyTo)(_ => Rejected("Quantity must be greater than zero"))
+            } else {
+              Effect.persist(GemsObtained(playerId, quantity))
+                .thenReply(replyTo)(_ => Accepted("Success!"))
+            }
+          case _ => Effect.noReply
         }
     }
 
-  /**
-   * where the replaying of stored events happen
-   */
-
   def handleEvent(state: State, event: Event): State =
-    event match {
-      case GemsObtained(_, quantity) => state.updateGems(quantity: List[Gem])
+    state match {
+      case state: BoardGameStates.BlankState     => state
+      case state@ BoardGameStates.ConcludedState => throw new IllegalStateException(s"unexpected event [$event] in state [$state]")
+      case state: BoardGameStates.PlayingState   =>
+        event match {
+          case GemsObtained(_, quantity) => state.updateGems(quantity: List[Gem])
+        }
     }
 
-  def apply(playerId: String): Behavior[Command] = {
-    EventSourcedBehavior[Command, Event, State](
-      PersistenceId("BoardGame", playerId),
-      State.empty,
-      (state, command) => handleCommand(playerId, state, command),
-      (state, event) => handleEvent(state, event)
-    )
-  }
+//  val sourceProvider: SourceProvider[Offset, EventEnvelope[BoardGameEvents.Event]] =
+//    EventSourcedProvider
+//      .eventsByTag[BoardGameEvents.Event](system, readJournalPluginId = CassandraReadJournal.Identifier, tag = "")
 
 }

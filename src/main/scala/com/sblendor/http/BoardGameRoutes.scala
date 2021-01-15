@@ -7,9 +7,9 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import com.sblendor.clustersharding.BoardGame
-import com.sblendor.domain.BoardGameCommands
-import com.sblendor.domain.BoardGameCommands.Confirmation
-import com.sblendor.domain.Gem.Gem
+import com.sblendor.persistence.Gem.Gem
+import com.sblendor.persistence.BoardGameCommands
+import com.sblendor.persistence.BoardGameCommands.Confirmation
 
 import scala.concurrent.Future
 import scala.concurrent.duration._

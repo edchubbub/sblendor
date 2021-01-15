@@ -1,11 +1,12 @@
 package com.sblendor.domain
 
-import com.sblendor.domain.Gem.Gem
+import com.sblendor.persistence.Gem
+import com.sblendor.persistence.Gem.Gem
 import spray.json.{DefaultJsonProtocol, DeserializationException, JsArray, JsString, JsValue, RootJsonFormat}
 
 object JsonProtocol extends DefaultJsonProtocol {
 
-  implicit val getGemsRequestFormat: RootJsonFormat[List[Gem]] = new RootJsonFormat[List[com.sblendor.domain.Gem.Gem]] {
+  implicit val getGemsRequestFormat: RootJsonFormat[List[Gem]] = new RootJsonFormat[List[Gem.Gem]] {
     def write(list: List[Gem]): JsValue = {
       JsArray(list.map {
         case Gem.Diamond  => JsString("diamond")

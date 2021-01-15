@@ -1,8 +1,8 @@
 package com.sblendor.http
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import com.sblendor.domain.Gem
-import com.sblendor.domain.Gem.Gem
+import com.sblendor.persistence.Gem
+import com.sblendor.persistence.Gem.Gem
 import spray.json.{DefaultJsonProtocol, DeserializationException, JsArray, JsString, JsValue, RootJsonFormat}
 
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
