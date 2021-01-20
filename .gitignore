@@ -2,3 +2,5 @@
 .idea/*
 project/*
 target/*
+src/main/project/target/*
+src/main/target/*
