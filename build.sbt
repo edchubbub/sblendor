@@ -1,6 +1,7 @@
 val AkkaVersion = "2.6.10"
 val AkkaHttpVersion = "10.1.11"
 val AkkaManagementVersion = "1.0.9"
+val AkkaPersistenceCassandraVersion = "1.0.4"
 val LogbackVersion = "1.2.3"
 
 lazy val buildSettings = Seq(
@@ -14,6 +15,7 @@ val akkaDependencies = Seq(
   "com.typesafe.akka" %% "akka-persistence-typed" % AkkaVersion,
   "com.typesafe.akka" %% "akka-persistence-query" % AkkaVersion,
   "com.typesafe.akka" %% "akka-serialization-jackson" % AkkaVersion,
+  "com.typesafe.akka" %% "akka-cluster-tools" % AkkaVersion,
   "com.lightbend.akka" %% "akka-projection-eventsourced" % "1.0.0"
 )
 
@@ -27,6 +29,10 @@ val akkaManagementDependencies = Seq(
   "com.lightbend.akka.management" %% "akka-management-cluster-http" % AkkaManagementVersion
 )
 
+val akkaPersistenceCassandraDependencies = Seq(
+  "com.typesafe.akka" %% "akka-persistence-cassandra" % AkkaPersistenceCassandraVersion
+)
+
 val logDependencies = Seq(
   "ch.qos.logback" % "logback-classic" % LogbackVersion
 )
@@ -35,5 +41,5 @@ lazy val sblendor = project
   .in(file("."))
   .settings(
     mainClass in (Compile, run) := Some("com.sblendor.Main"),
-    libraryDependencies ++= akkaDependencies ++ akkaHttpDependencies ++ akkaManagementDependencies ++ logDependencies
+    libraryDependencies ++= akkaDependencies ++ akkaHttpDependencies ++ akkaManagementDependencies ++ akkaPersistenceCassandraDependencies ++ logDependencies
   )
