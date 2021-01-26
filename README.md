@@ -91,9 +91,9 @@ based on akka-persistence-cassandra example project
         }
     }
 
-#### 2.3 Contact points configuration
+#### 2.3 Contact points configuration (for Cassandra client)
     datastax-java-driver {
-        basic.contact-points = ["cassandra:9042"]
+        basic.contact-points = ["0.0.0.0:9042"]
         basic.load-balancing-policy.local-datacenter = "datacenter1"
     }
 
@@ -103,6 +103,10 @@ https://doc.akka.io/docs/akka-persistence-cassandra/current/overview.html
     val akkaPersistenceCassandraDependencies = Seq(
         "com.typesafe.akka" %% "akka-persistence-cassandra" % "1.0.4"
     )
+
+#### 2.5 Add Custom Session creation for Cassandra
+The default `CassandraSessionSettings()` points to the path `alpakka.cassandra` for configuration
+
 
 ###Glossary:
 | Name  | Description |

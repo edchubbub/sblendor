@@ -3,7 +3,7 @@ package com.sblendor
 import akka.actor.AddressFromURIString
 import akka.actor.typed.ActorSystem
 import akka.cluster.typed._
-import akka.management.scaladsl.AkkaManagement
+import com.sblendor.cassandra.CassandraSession
 import com.sblendor.clustersharding.Guardian
 import com.typesafe.config.{Config, ConfigFactory}
 
@@ -34,7 +34,8 @@ object Main {
 				else 0
 
 			val config = configWithPort(port)
-			ActorSystem[Nothing](Guardian(httpPort), "Sblendor", config)
+			val actorSystem: ActorSystem[Nothing] = ActorSystem[Nothing](Guardian(httpPort), "Sblendor", config)
+//			CassandraSession.init(actorSystem)
 			//AkkaManagement(system).start
 		}
 	}

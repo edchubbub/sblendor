@@ -1,6 +1,10 @@
-.bsp/*
-.idea/*
-project/*
-target/*
-src/main/project/target/*
-src/main/target/*
+target/
+
+.settings
+.project
+.classpath
+
+.idea
+*.iml
+
+.DS_Store

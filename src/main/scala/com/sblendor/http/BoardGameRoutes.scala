@@ -7,12 +7,12 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import com.sblendor.clustersharding.BoardGame
-import com.sblendor.persistence.Gem.Gem
 import com.sblendor.persistence.BoardGameCommands
 import com.sblendor.persistence.BoardGameCommands.Confirmation
+import com.sblendor.persistence.Gem.Gem
 
+import java.util.UUID
 import scala.concurrent.Future
-import scala.concurrent.duration._
 import scala.concurrent.duration._
 
 
@@ -32,11 +32,18 @@ final class BoardGameRoutes[T](system: ActorSystem[T]) extends JsonSupport {
     ref.ask(BoardGameCommands.GetGems(gems, _))
   }
 
-  val boardGame: Route =
+  private def helloWorld: Future[Confirmation] = {
+    val ref = sharding.entityRefFor(BoardGame.EntityKey, UUID.randomUUID().toString)
+    ref.ask(BoardGameCommands.EndGame)
+  }
+
+  val boardGame: Route = {
     path("gems") {
       concat(
         get {
-          complete("hello world!")
+          onSuccess(helloWorld) { aaa =>
+            complete(StatusCodes.Accepted -> "aaaaaa")
+          }
         }
       )
     } ~ path("gems" / Segment) { playerId =>
@@ -50,5 +57,6 @@ final class BoardGameRoutes[T](system: ActorSystem[T]) extends JsonSupport {
         }
       )
     }
+  }
 }
 

@@ -4,5 +4,5 @@
 
 - Error: ERROR com.sblendor.BoardGame$ - Supervisor StopSupervisor saw failure: Default journal plugin is not configured, see 'reference.conf'
          java.lang.IllegalArgumentException: Default journal plugin is not configured, see 'reference.conf'
-- Casue: When creating an ESB archi app and no "journal" settings was set 
+- Cause: When creating an ESB archi app and no "journal" settings was set 
         

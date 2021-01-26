@@ -45,12 +45,13 @@ object BoardGame {
       ).snapshotWhen((state, _, _) => {
         context.log.info2("Snapshot actor {} => state: {}", context.self.path.name, state)
         true
-      }).onPersistFailure(
+      }).onPersistFailure {
+        context.log.error("Persist failure")
         SupervisorStrategy.restartWithBackoff(
           minBackoff = 10.seconds,
           maxBackoff = 60.seconds,
           randomFactor = 0)
-      )
+      }
     }
   }
 
