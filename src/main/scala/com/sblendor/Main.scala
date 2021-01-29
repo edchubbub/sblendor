@@ -28,16 +28,20 @@ object Main {
 			case None 			=> seedNodePorts ++ Seq(0)
 		}
 
-		ports foreach { port =>
-			val httpPort =
-				if (port > 0) 10000 + port
-				else 0
+//		(ports) foreach { port =>
+
+//			val httpPort =
+//				if (port > 0) 10000 + port
+//				else 0
+
+			val httpPort = 35251
+			val port = 25251
 
 			val config = configWithPort(port)
 			val actorSystem: ActorSystem[Nothing] = ActorSystem[Nothing](Guardian(httpPort), "Sblendor", config)
-//			CassandraSession.init(actorSystem)
+			CassandraSession.init(actorSystem)
 			//AkkaManagement(system).start
-		}
+//		}
 	}
 
 	def configWithPort(port: Int): Config = {

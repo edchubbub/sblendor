@@ -6,11 +6,12 @@ import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityType
 import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior, ReplyEffect}
 import com.sblendor.persistence.BoardGameCommands._
-import com.sblendor.persistence.BoardGameEvents.{Event, GameEnded, GemsObtained}
+import com.sblendor.persistence.BoardGameEvents.{Event, GameEnded, GemsObtained, PlayerJoined}
 import com.sblendor.persistence.BoardGameStates
-import com.sblendor.persistence.BoardGameStates.State
+import com.sblendor.persistence.BoardGameStates.{Playing, Ready, State}
 import com.sblendor.persistence.Gem.Gem
 
+import scala.annotation.tailrec
 import scala.concurrent.duration._
 
 object BoardGame {
@@ -39,7 +40,7 @@ object BoardGame {
     Behaviors.setup[Command] { context =>
       EventSourcedBehavior.withEnforcedReplies[Command, Event, State](
         PersistenceId("BoardGame", playerId),
-        BoardGameStates.BlankState(),
+        BoardGameStates.State.ready,
         (state, command) => handleCommand(playerId, state, command),
         (state, event)   => handleEvent(state, event)
       ).snapshotWhen((state, _, _) => {
@@ -55,18 +56,13 @@ object BoardGame {
     }
   }
 
-  def handleCommand(playerId: String, state: State, command: Command): ReplyEffect[Event, State] =
+  @tailrec
+  def handleCommand(playerId: String, state: State, command: Command): ReplyEffect[Event, State] = {
     state match {
-      case BoardGameStates.BlankState(_)  => Effect.noReply
-      case BoardGameStates.ConcludedState =>
-        command match {
-          case EndGame(replyTo) =>
-            Effect.persist(GameEnded)
-              .thenReply(replyTo)(_ => Accepted("Game Concluded!"))
-          case _ => Effect.noReply
-        }
-
-      case BoardGameStates.PlayingState(_) =>
+      case _ if state.isReady =>
+        state.updateDescription(Playing)
+        handleCommand(playerId, state, command)
+      case _ =>
         command match {
           case GetGems(quantity, replyTo) =>
             if (quantity.size <= 0) {
@@ -76,18 +72,22 @@ object BoardGame {
               Effect.persist(GemsObtained(playerId, quantity))
                 .thenReply(replyTo)(_ => Accepted("Success!"))
             }
+          case JoinPlayer(player, replyTo) =>
+            Effect.persist(PlayerJoined(player))
+              .thenReply(replyTo)(_ => Accepted("Success!"))
           case _ => Effect.noReply
         }
     }
+  }
 
   def handleEvent(state: State, event: Event): State =
-    state match {
-      case state: BoardGameStates.BlankState     => state
-      case state@ BoardGameStates.ConcludedState => throw new IllegalStateException(s"unexpected event [$event] in state [$state]")
-      case state: BoardGameStates.PlayingState   =>
+    state.description match {
+      case Ready => state
+      case Playing =>
         event match {
           case GemsObtained(_, quantity) => state.updateGems(quantity: List[Gem])
         }
+//      case d: Playing => throw new IllegalStateException(s"unexpected event [$event] in state [$state]")
     }
 
 //  val sourceProvider: SourceProvider[Offset, EventEnvelope[BoardGameEvents.Event]] =

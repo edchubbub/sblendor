@@ -13,6 +13,7 @@ object BoardGameCommands {
   sealed trait Command extends CborSerializable
   final case class GetGems(quantity: List[Gem], replyTo: ActorRef[Confirmation]) extends Command
   final case class EndGame(replyTo: ActorRef[Confirmation]) extends Command
+  final case class JoinPlayer(player: Player, replyTo: ActorRef[Confirmation]) extends Command
 
   sealed trait Confirmation extends CborSerializable
   final case class Accepted(msg: String) extends Confirmation

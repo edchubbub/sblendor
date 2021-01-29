@@ -12,5 +12,6 @@ object BoardGameEvents {
   sealed trait Event extends CborSerializable
   final case class GemsObtained(playerId: String, quantity: List[Gem]) extends Event
   final case object GameEnded extends Event
+  final case class PlayerJoined(player: Player) extends Event
 
 }
